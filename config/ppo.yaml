@@ -1,0 +1,27 @@
+# Training config for the pure-PPO controller baseline.
+# Loaded by scripts/train_ppo.py
+
+env:
+  name: TrajTrackAviary          # custom circular-trajectory-tracking env (src/envs/)
+  ctrl_freq_hz: 48
+  pyb_freq_hz: 240
+  episode_len_sec: 10             # one period of the circular trajectory
+  action_type: rpm                # raw motor RPM actions (gym_pybullet_drones ActionType)
+  obs_type: kin                   # kinematic state observation
+
+domain_randomization:
+  enabled: true
+  mass_scale_range: [0.9, 1.1]    # uniform multiplier on nominal drone mass (±10%)
+
+training:
+  algo: PPO
+  policy: MlpPolicy
+  total_timesteps: 500000         # start small on CPU; raise if time budget allows
+  n_envs: 2                       # matches the 2 physical cores available
+  seed: 0
+  eval_freq: 5000
+  n_eval_episodes: 5
+
+logging:
+  output_dir: results/ppo
+  tensorboard: true
