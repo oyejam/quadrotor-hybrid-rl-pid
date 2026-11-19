@@ -1,7 +1,7 @@
 # Hybrid Reinforcement Learning and Residual PID for Quadrotor Trajectory Tracking
 
 ## Participants
-- [Your full name] — ISU/ITMO ID: [fill in]
+- Jamiu Olaide Oyetunde — ISU/ITMO ID: 520194
 
 ## Description of the Conducted Research
 
