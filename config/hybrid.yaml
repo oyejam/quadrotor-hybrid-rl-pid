@@ -1,0 +1,32 @@
+# Training config for the hybrid (PID + RL-residual) controller.
+# Loaded by scripts/train_hybrid.py
+# Same env/training budget as config/ppo.yaml so the two are comparable.
+
+env:
+  name: TrajTrackAviary
+  ctrl_freq_hz: 48
+  pyb_freq_hz: 240
+  episode_len_sec: 10
+  action_type: rpm
+  obs_type: kin
+
+domain_randomization:
+  enabled: true
+  mass_scale_range: [0.9, 1.1]
+
+hybrid:
+  residual_clip_fraction: 0.2     # residual action clipped to ±20% of PID's RPM output
+  pid_drone_model: cf2x
+
+training:
+  algo: PPO
+  policy: MlpPolicy
+  total_timesteps: 500000
+  n_envs: 2
+  seed: 0
+  eval_freq: 5000
+  n_eval_episodes: 5
+
+logging:
+  output_dir: results/hybrid
+  tensorboard: true

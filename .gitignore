@@ -1,0 +1,38 @@
+# Vendored third-party repo (cloned by setup step in README, not committed)
+external/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+env/
+*.egg-info/
+.eggs/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Model weights / logs / large artifacts
+*.zip
+*.pt
+*.pth
+*.h5
+*.log
+results/runs/
+results/*/tb/
+results/*/*.zip
+models/*.zip
+tensorboard_logs/
+wandb/
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/
+
+# Data (keep folder, ignore contents — document download in data/README.md)
+data/*
+!data/.gitkeep
+!data/README.md
