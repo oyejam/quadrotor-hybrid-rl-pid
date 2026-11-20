@@ -76,6 +76,32 @@ pip install -e external/gym-pybullet-drones --no-deps   # core env only, skips i
 pip install -r requirements.txt                          # the real, platform-compatible pins
 ```
 
+### Docker (recommended if you're not on Intel macOS)
+
+The venv setup above includes several Intel-macOS-specific workarounds (Python 3.12
+via Homebrew, the `torch==2.2.2`/`stable-baselines3==2.4.1` pinning, the `--no-deps`
+install trick) that only exist because PyPI has no current PyTorch wheel for that
+platform. None of that is needed on a standard Linux container, so Docker gives a
+plain "clone and run" path instead of following platform-specific instructions.
+
+```bash
+docker build -t quadrotor-hybrid-rl-pid .
+docker run --rm quadrotor-hybrid-rl-pid                                  # PID baseline smoke test
+docker run --rm quadrotor-hybrid-rl-pid python scripts/evaluate_robustness.py
+docker run --rm -v "$(pwd)/results:/app/results" quadrotor-hybrid-rl-pid python scripts/train_ppo.py
+```
+
+Mount `results/` (as in the last example) if you want artifacts written inside the
+container (trained models, CSVs, plots) to persist on the host afterward.
+
+Note: `pybullet==3.2.7` has no published wheel for Python 3.12 on any platform yet, so
+`docker build` compiles it from source the first time — expect that step alone to take
+a few minutes. Every other pinned dependency installs from a prebuilt wheel.
+
+**The image intentionally pins the exact same package versions as the venv setup**
+(not newer ones), so a result reproduced via Docker is reproducing the same
+experiment that produced `docs/results.md`, not a different one.
+
 ## Running and Usage
 
 - Train the PID baseline (no learning, scripted controller): `python scripts/run_pid_baseline.py`
