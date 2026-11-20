@@ -23,6 +23,8 @@ env/
 results/runs/
 results/*/tb/
 results/*/*.zip
+results/recording_*/
+results/_demo_frames/
 models/*.zip
 tensorboard_logs/
 wandb/

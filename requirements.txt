@@ -18,3 +18,4 @@ control==0.10.2
 pytest==9.2.0
 pyyaml==6.0.3
 tensorboard==2.21.0
+imageio-ffmpeg==0.8.1  # bundled static ffmpeg binary, used by scripts/record_demo.py
