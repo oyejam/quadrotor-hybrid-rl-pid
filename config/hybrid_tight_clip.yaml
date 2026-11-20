@@ -1,0 +1,33 @@
+# Ablation of config/hybrid.yaml: tests whether a tighter residual bound
+# closes the robustness gap seen in the clip=0.2 run (docs/results.md
+# section 3). Everything else is identical to config/hybrid.yaml so the
+# only variable changed is residual_clip_fraction.
+
+env:
+  name: TrajTrackAviary
+  ctrl_freq_hz: 48
+  pyb_freq_hz: 240
+  episode_len_sec: 10
+  action_type: rpm
+  obs_type: kin
+
+domain_randomization:
+  enabled: true
+  mass_scale_range: [0.9, 1.1]
+
+hybrid:
+  residual_clip_fraction: 0.08    # tightened from 0.2 — the ablation variable
+  pid_drone_model: cf2x
+
+training:
+  algo: PPO
+  policy: MlpPolicy
+  total_timesteps: 500000
+  n_envs: 2
+  seed: 0
+  eval_freq: 5000
+  n_eval_episodes: 5
+
+logging:
+  output_dir: results/hybrid_tight_clip
+  tensorboard: true

@@ -72,6 +72,39 @@ So the hybrid controller did not inherit PID's robustness; if anything, adding t
 learned residual made the combined controller *less* robust than PID alone across
 most of the tested range.
 
+### 3.1 Ablation: does a tighter residual bound close the gap?
+
+Section 4 flagged `residual_clip_fraction=0.2` as a likely cause and proposed testing
+a tighter bound. Ran the identical setup with `residual_clip_fraction=0.08`
+(`config/hybrid_tight_clip.yaml`, everything else unchanged) and re-swept the same 7
+mass scales, 10 episodes each.
+
+| mass_scale | PID | PPO | Hybrid (clip=0.2) | Hybrid (clip=0.08) |
+|---|---|---|---|---|
+| 0.70 | 0.107 | 0.120 | 0.907 | 0.924 |
+| 0.80 | 0.098 | 0.094 | 1.234 | 0.898 |
+| 0.90 | 0.093 | 0.063 | 0.697 | 0.688 |
+| 1.00 (nominal) | 0.090 | 0.028 | 0.063 | 0.088 |
+| 1.10 | 0.094 | 0.996 | 1.744 | 0.924 |
+| 1.20 | 0.100 | 0.447 | 0.435 | 0.434 |
+| 1.30 | 0.109 | 0.434 | 0.432 | 0.432 |
+
+**Result: tightening the clip did not close the gap.** It roughly halved the single
+worst spike (1.744 → 0.924 at +10% mass, now in line with PPO at that point rather
+than far worse), but everywhere else the tight-clip hybrid is statistically
+indistinguishable from the original clip=0.2 hybrid, and both remain 5-15x worse than
+PID across most of the range. Training was also notably more stable at the tighter
+clip (final-eval reward std dropped from ±108.9 to ±9.4, see section 1), so the
+tighter bound does produce a better-behaved *training process* — it just doesn't
+translate into better *zero-shot robustness*.
+
+This rules out `residual_clip_fraction` as the dominant cause. The more likely
+explanation is the second one listed in section 4: the training budget and/or reward
+shaping isn't enough for the residual policy to learn when to defer to PID versus
+correct it, regardless of how tightly the residual's magnitude is bounded. That
+conclusion is itself informative and narrows the explanation space for future work,
+even though the specific fix tried here didn't work.
+
 ## 4. Discussion
 
 **H1 (robustness) — rejected by this run.** The predicted mechanism was that the PID
@@ -80,10 +113,10 @@ residual appears to actively destabilize that floor outside a narrow band around
 training conditions: Hybrid underperforms plain PID everywhere except exactly at
 nominal mass, including inside its own ±10% training DR range. Plausible causes worth
 investigating before final write-up:
-- `residual_clip_fraction=0.2` (config/hybrid.yaml) may simply be too large — the
-  policy can override up to 20% of PID's commanded RPM per motor, which may be enough
-  to meaningfully destabilize a controller that is otherwise quite well-behaved. Worth
-  re-running with a smaller clip (e.g. 0.05-0.1) to see if robustness improves.
+- ~~`residual_clip_fraction=0.2` may simply be too large~~ — **tested and ruled out**,
+  see section 3.1: a 0.08 clip produced a much more stable training process but did
+  not meaningfully improve zero-shot robustness, so the clip bound is not the
+  dominant cause.
 - 500k timesteps on CPU may not be enough for the hybrid policy to learn a *refinement*
   of PID rather than noisy interference — PPO's own learning curve suggests the
   RPM-level control task is already hard to learn cleanly in this budget (see section
