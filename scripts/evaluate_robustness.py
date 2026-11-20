@@ -25,9 +25,17 @@ from stable_baselines3 import PPO
 from src.envs.traj_track_aviary import TrajTrackAviary
 from src.controllers.hybrid_wrapper import HybridResidualWrapper
 from src.train_utils import load_config
+from src.traj import is_out_of_bounds
 from gym_pybullet_drones.utils.enums import ActionType, ObservationType
 
 from run_pid_baseline import run_episode as run_pid_episode
+
+# Evaluation uses deterministic actions throughout (model.predict(...,
+# deterministic=True)) rather than sampling stochastically, per
+# docs/research_plan.md section 4.4. This removes the policy's own sampling
+# noise as a source of variance, so the mass-scale sweep measures response to
+# the actual independent variable (domain shift) rather than conflating it
+# with action noise.
 
 
 def run_rl_episode(model, mass_scale, hybrid, env_cfg, residual_clip, seed) -> dict:
@@ -41,17 +49,21 @@ def run_rl_episode(model, mass_scale, hybrid, env_cfg, residual_clip, seed) -> d
 
     obs, info = env.reset(seed=seed)
     errors = []
+    crashed = False
     terminated = truncated = False
     while not (terminated or truncated):
         action, _ = model.predict(obs, deterministic=True)
         obs, reward, terminated, truncated, info = env.step(action)
         errors.append(info["tracking_error"])
+        crashed = crashed or is_out_of_bounds(env.unwrapped._getDroneStateVector(0))
     env.close()
 
     errors = np.array(errors) if errors else np.array([np.nan])
     return {"rmse": float(np.sqrt(np.mean(errors ** 2))),
             "mean_error": float(errors.mean()),
-            "max_error": float(errors.max())}
+            "max_error": float(errors.max()),
+            "episode_length": len(errors),
+            "success": not crashed}
 
 
 def main():
@@ -84,7 +96,9 @@ def main():
             pid_res = run_pid_episode(mass_scale=mass_scale, seed=seed)
             rows.append({"controller": "pid", "mass_scale": mass_scale, "episode": ep,
                          "rmse": pid_res["rmse"], "mean_error": pid_res["mean_error"],
-                         "max_error": pid_res["max_error"]})
+                         "max_error": pid_res["max_error"],
+                         "episode_length": pid_res["episode_length"],
+                         "success": pid_res["success"]})
 
             if ppo_model is not None:
                 res = run_rl_episode(ppo_model, mass_scale, hybrid=False,
@@ -106,7 +120,8 @@ def main():
         os.makedirs(out_dir, exist_ok=True)
     with open(args.output, "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=["controller", "mass_scale", "episode",
-                                               "rmse", "mean_error", "max_error"])
+                                               "rmse", "mean_error", "max_error",
+                                               "episode_length", "success"])
         writer.writeheader()
         writer.writerows(rows)
     print(f"[evaluate_robustness] wrote {len(rows)} rows to {args.output}")

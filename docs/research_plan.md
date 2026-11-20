@@ -70,8 +70,39 @@ Run N episodes (e.g. N=10) per mass value per controller to get a mean ± std, s
 PyBullet contact/dynamics has some stochasticity and PPO/Hybrid policies are stochastic
 at inference unless you force deterministic actions (decide and document which).
 
+**Decision (resolved):** evaluation uses deterministic actions
+(`model.predict(obs, deterministic=True)`), for both PPO and Hybrid, throughout
+`scripts/evaluate_robustness.py` and `scripts/evaluate_ablation.py`. This removes the
+policy's own action-sampling noise as a source of run-to-run variance, so the 10
+episodes per mass value measure variability from the environment (PyBullet
+step-to-step dynamics, reset randomness) rather than conflating it with the policy
+randomly sampling different actions for the same state.
+
+**Crash/success definition (resolved):** "success" means the episode never triggers
+`src/traj.py`'s `is_out_of_bounds(state)` — position more than 2m from origin in x/y,
+altitude above 2m, or roll/pitch beyond 0.6 rad — matching the exact bounds
+`TrajTrackAviary._computeTruncated` uses to end an RL episode early. The PID baseline
+runs in `CtrlAviary`, which has no such built-in truncation, so `run_pid_baseline.py`
+checks the identical condition manually at every step so "success" means the same
+thing for all three controllers regardless of which environment class produced the
+episode (see `scripts/run_pid_baseline.py` and `scripts/evaluate_robustness.py`'s
+`run_rl_episode`).
+
+**Important methodological note, found after initially shipping this evaluation
+without success tracking:** RMSE computed over a crashed/truncated episode is *not*
+directly comparable to RMSE over a completed one — a policy that crashes almost
+immediately near the start of the trajectory can show an artificially low RMSE simply
+because it's averaged over very few, easy, near-the-start steps, not because it
+tracked well. Concretely: PPO's apparently-best RMSE (0.028m) at nominal mass turned
+out to come from episodes that crashed after ~12 of 480 steps. See docs/results.md §3
+for the corrected analysis, which reports success rate alongside RMSE and separates
+unconditional RMSE (all episodes, comparable to the original write-up) from RMSE
+conditional on success (the only version that's actually a fair tracking-quality
+comparison).
+
 ### 4.5 Metrics
-- Position RMSE over the episode (primary metric)
+- Position RMSE over the episode (primary metric) — **report both unconditional and
+  conditional-on-success**, since the two can tell very different stories (see above)
 - Success rate (episode completed without crash/instability, under a defined threshold)
 - Settling time / max transient error (secondary)
 - Training sample efficiency: environment steps to reach a fixed RMSE threshold on the

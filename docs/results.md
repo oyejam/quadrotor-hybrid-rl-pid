@@ -44,40 +44,69 @@ range (±10%).
 ## 3. Zero-shot robustness sweep (the core result, H1)
 
 Run 2026-11-20: 7 mass scales (0.7-1.3x nominal, 5% steps near center), 10 episodes
-each, all 3 controllers, 210 episodes total. Plot: `results/robustness_plot.png`.
-Raw data: `results/robustness_sweep.csv`.
+each, 4 controllers (PID, PPO, Hybrid clip=0.2, Hybrid clip=0.08), 280 episodes total.
+Plots: `results/robustness_plot.png` (RMSE), `results/success_rate_plot.png` (success
+rate). Raw data: `results/robustness_sweep.csv`.
 
-**Mean RMSE (m) by controller and test-time mass scale:**
+> **Correction to an earlier version of this section.** The first pass at this sweep
+> only recorded RMSE, not whether each episode actually completed the trajectory.
+> Adding success tracking (`episode_length`, `success` — see
+> docs/research_plan.md §4.4-4.5) revealed that several of the "good" RMSE numbers
+> originally reported here came from episodes that **crashed almost immediately**: a
+> policy that goes out of bounds after 12 of 480 steps near the easy starting region
+> produces a low RMSE simply because it's averaged over a handful of trivial steps,
+> not because it tracked well. Concretely, PPO's previously-reported best RMSE
+> (0.028m, "beating PID") at nominal mass came from episodes with a mean episode
+> length of **12 steps** — it was not flying the trajectory at all. The analysis below
+> replaces that misleading reading with the complete picture. This is a correction,
+> not a footnote: part of the original write-up's conclusion was wrong.
 
-| mass_scale | PID | PPO | Hybrid |
-|---|---|---|---|
-| 0.70 | 0.107 | 0.120 | 0.907 |
-| 0.80 | 0.098 | 0.094 | 1.234 |
-| 0.90 | 0.093 | 0.063 | 0.697 |
-| 1.00 (nominal) | 0.090 | 0.028 | 0.063 |
-| 1.10 | 0.094 | 0.996 | 1.744 |
-| 1.20 | 0.100 | 0.447 | 0.435 |
-| 1.30 | 0.109 | 0.434 | 0.430 |
+**Success rate (fraction of 10 episodes that completed in-bounds):**
 
-**H1 is not supported by this data — the opposite pattern appears.** PID is by far
-the most robust controller: its RMSE barely moves (0.090-0.109 m) across the entire
-±30% range. PPO is the best of the three exactly at the nominal mass it was centered
-on (0.028 m, beating PID) but degrades sharply and asymmetrically away from it,
-including inside its own training DR range (0.996 m at +10% mass). Hybrid is
-competitive only right at nominal (0.063 m) and is the *worst* controller everywhere
-else, by a wide margin (0.4-1.7 m) — including inside the training range, where it is
-roughly an order of magnitude worse than PID.
+| mass_scale | PID | PPO | Hybrid (clip=0.2) | Hybrid (clip=0.08) |
+|---|---|---|---|---|
+| 0.70 | 1.0 | 0.0 | 0.0 | 0.0 |
+| 0.80 | 1.0 | 0.0 | 0.0 | 0.0 |
+| 0.90 | 1.0 | 0.0 | 0.0 | 0.0 |
+| 1.00 (nominal) | 1.0 | 0.0 | 0.0 | **1.0** |
+| 1.10 | 1.0 | 1.0 | 0.0 | 0.0 |
+| 1.20 | 1.0 | 1.0 | 1.0 | 1.0 |
+| 1.30 | 1.0 | 1.0 | 1.0 | 1.0 |
 
-So the hybrid controller did not inherit PID's robustness; if anything, adding the
-learned residual made the combined controller *less* robust than PID alone across
-most of the tested range.
+**Mean episode length (of 480 steps):**
 
-### 3.1 Ablation: does a tighter residual bound close the gap?
+| mass_scale | PID | PPO | Hybrid (clip=0.2) | Hybrid (clip=0.08) |
+|---|---|---|---|---|
+| 0.70 | 480 | 16 | 57 | 57 |
+| 0.80 | 480 | 18 | 88 | 85 |
+| 0.90 | 480 | 19 | 78 | 140 |
+| 1.00 (nominal) | 480 | 12 | 44 | 482 |
+| 1.10 | 480 | 482 | 290 | 189 |
+| 1.20 | 480 | 482 | 482 | 482 |
+| 1.30 | 480 | 482 | 482 | 482 |
 
-Section 4 flagged `residual_clip_fraction=0.2` as a likely cause and proposed testing
-a tighter bound. Ran the identical setup with `residual_clip_fraction=0.08`
-(`config/hybrid_tight_clip.yaml`, everything else unchanged) and re-swept the same 7
-mass scales, 10 episodes each.
+**The real finding: PID is the only controller that reliably completes the
+trajectory at all, across the entire ±30% range tested.** Both PPO and the original
+hybrid (clip=0.2) crash on essentially every episode at or below nominal mass (0%
+success from -30% to 0%), and only become reliable once the true mass is **at least
+10% heavier** than what they were centered on during training. This is a sharp,
+asymmetric failure mode that the RMSE-only view completely hid: a drone that is
+lighter than or equal to its training-nominal mass causes near-total failure for both
+learned controllers, while a heavier drone does not.
+
+A plausible physical explanation, worth stating as a hypothesis rather than a proven
+mechanism: the RPM action mapping used here
+(`rpm = HOVER_RPM * (1 + 0.05*action)`, see `src/envs/traj_track_aviary.py` via
+`BaseRLAviary._preprocessAction`) computes `HOVER_RPM` from the *nominal* mass,
+fixed regardless of the actual randomized mass. For the same policy output, a
+genuinely lighter drone receives more thrust per unit mass than a heavier one (same
+force, less inertia), so the same action is more likely to cause overshoot and
+instability when the drone is lighter, and more forgiving when it's heavier. PID does
+not have this problem because it reacts to the currently measured error rather than
+applying a fixed-mass-calibrated baseline action.
+
+**RMSE, unconditional (all episodes, including crashed ones — what was originally
+reported):**
 
 | mass_scale | PID | PPO | Hybrid (clip=0.2) | Hybrid (clip=0.08) |
 |---|---|---|---|---|
@@ -89,52 +118,90 @@ mass scales, 10 episodes each.
 | 1.20 | 0.100 | 0.447 | 0.435 | 0.434 |
 | 1.30 | 0.109 | 0.434 | 0.432 | 0.432 |
 
-**Result: tightening the clip did not close the gap.** It roughly halved the single
-worst spike (1.744 → 0.924 at +10% mass, now in line with PPO at that point rather
-than far worse), but everywhere else the tight-clip hybrid is statistically
-indistinguishable from the original clip=0.2 hybrid, and both remain 5-15x worse than
-PID across most of the range. Training was also notably more stable at the tighter
-clip (final-eval reward std dropped from ±108.9 to ±9.4, see section 1), so the
-tighter bound does produce a better-behaved *training process* — it just doesn't
-translate into better *zero-shot robustness*.
+**RMSE, conditional on success only (N/A = zero successful episodes at that point —
+the only version of this table that is a fair tracking-quality comparison):**
 
-This rules out `residual_clip_fraction` as the dominant cause. The more likely
-explanation is the second one listed in section 4: the training budget and/or reward
-shaping isn't enough for the residual policy to learn when to defer to PID versus
-correct it, regardless of how tightly the residual's magnitude is bounded. That
-conclusion is itself informative and narrows the explanation space for future work,
-even though the specific fix tried here didn't work.
+| mass_scale | PID | PPO | Hybrid (clip=0.2) | Hybrid (clip=0.08) |
+|---|---|---|---|---|
+| 0.70 | 0.107 | N/A | N/A | N/A |
+| 0.80 | 0.098 | N/A | N/A | N/A |
+| 0.90 | 0.093 | N/A | N/A | N/A |
+| 1.00 (nominal) | 0.090 | N/A | N/A | 0.088 |
+| 1.10 | 0.094 | 0.996 | N/A | N/A |
+| 1.20 | 0.100 | 0.447 | 0.435 | 0.434 |
+| 1.30 | 0.109 | 0.434 | 0.430 | 0.432 |
+
+Reading the unconditional table alone (as the original write-up did) makes PPO and
+Hybrid-clip=0.2 look *best* at nominal mass — exactly where they actually have a 0%
+success rate. The conditional table shows what's really comparable: **wherever a
+learned controller does manage to complete the trajectory, its tracking error is
+still 4-10x worse than PID's**, not merely "a bit worse at the edges" as the original
+analysis suggested.
+
+**H1 is not supported, and more strongly rejected than the original analysis
+showed.** The original hypothesis predicted the hybrid controller would degrade more
+*gracefully* than PID or PPO outside the training range. The corrected data shows
+something more severe: the hybrid controller (either clip setting) frequently fails
+to complete the trajectory **at all** across most of the tested range, including
+inside its own training distribution, while PID never fails once. The hybrid
+structure did not inherit PID's robustness; it inherited PPO's brittleness to light
+drone mass without reliably inheriting PID's floor.
+
+### 3.1 Ablation: does a tighter residual bound close the gap?
+
+Section 4 flagged `residual_clip_fraction=0.2` as a likely cause and proposed testing
+a tighter bound. Ran the identical setup with `residual_clip_fraction=0.08`
+(`config/hybrid_tight_clip.yaml`, everything else unchanged) — see the 4-column
+tables in section 3 above for the full comparison.
+
+**Revised result (success-rate data changes this conclusion from the original
+RMSE-only version):** tightening the clip produced one specific, real improvement —
+the tight-clip hybrid is the *only* learned controller that reliably completes the
+trajectory exactly at nominal mass (100% success, RMSE 0.088m, essentially matching
+PID). That is a genuine, measurable effect of the ablation, not noise. But it did not
+broaden the controller's operating range: both clip settings still fail on every
+episode at every mass below nominal, and the tight-clip version also fails again at
++10% (0% success) before recovering at +20%/+30% — an odd non-monotonic dip that,
+with only 10 episodes per point, could be a real narrow failure mode or could be
+sampling variance; more episodes per point would be needed to tell which.
+
+So the revised conclusion is more specific than "no effect": a tighter residual bound
+can make the hybrid reliable exactly at the mass it was tuned around, but does not
+fix the underlying asymmetric brittleness to lighter-than-nominal mass. That
+asymmetry is consistent with the action-mapping explanation above, which a clip bound
+alone cannot address since it constrains the residual's *magnitude*, not the
+miscalibration in the *baseline* RPM it's added to.
 
 ## 4. Discussion
 
-**H1 (robustness) — rejected by this run.** The predicted mechanism was that the PID
-term gives the hybrid a "stability floor" that the residual builds on. Instead, the
-residual appears to actively destabilize that floor outside a narrow band around the
-training conditions: Hybrid underperforms plain PID everywhere except exactly at
-nominal mass, including inside its own ±10% training DR range. Plausible causes worth
-investigating before final write-up:
-- ~~`residual_clip_fraction=0.2` may simply be too large~~ — **tested and ruled out**,
-  see section 3.1: a 0.08 clip produced a much more stable training process but did
-  not meaningfully improve zero-shot robustness, so the clip bound is not the
-  dominant cause.
+**H1 (robustness) — rejected, and the failure mode is sharper than first reported.**
+The predicted mechanism was that the PID term gives the hybrid a "stability floor"
+that the residual builds on. Instead, both the hybrid and plain PPO fail to complete
+the trajectory at all across most of the tested mass range — this isn't just "worse
+tracking," it's "frequently doesn't fly the route." Causes investigated:
+- ~~`residual_clip_fraction=0.2` may simply be too large~~ — **tested in section
+  3.1**: a tighter 0.08 clip fixed reliability exactly at nominal mass but left the
+  broader asymmetric failure (lighter-than-nominal mass) unresolved, so the clip
+  bound is a partial but not dominant cause.
+- **New leading hypothesis (section 3):** the fixed-nominal-mass `HOVER_RPM` baseline
+  in the RPM action mapping is miscalibrated for lighter actual masses, making
+  instability much more likely below nominal and progressively less likely above
+  it — consistent with the sharp success-rate transition observed at exactly the
+  nominal-mass boundary for both PPO and Hybrid.
 - 500k timesteps on CPU may not be enough for the hybrid policy to learn a *refinement*
-  of PID rather than noisy interference — PPO's own learning curve suggests the
-  RPM-level control task is already hard to learn cleanly in this budget (see section
-  1), and the hybrid adds another layer of complexity (the residual must learn when
-  to stay near zero vs. correct).
-- Both PPO and Hybrid show a non-monotonic spike in error exactly at +10% mass (right
-  at the training range's edge), which is the single worst point for both — this could
-  be a genuine edge-of-distribution effect, or partly sampling noise from only 10
-  episodes per point. More episodes (or more seeds) would help confirm this isn't
-  noise before treating it as a real finding.
+  of PID rather than noisy interference — raw-RPM control is already a hard RL
+  problem to learn cleanly in this budget (see section 1).
+- The non-monotonic success dip at +10% for the tight-clip hybrid (section 3.1) may
+  be a genuine edge-of-distribution effect or partly sampling noise from only 10
+  episodes per point; more episodes or seeds would help confirm which.
 
-This is still a usable, honest result: it shows classical PID's well-known robustness
-advantage over learned control in a concrete, measured way, and shows that naively
-wrapping RL around a PID controller does not automatically inherit that robustness —
-the wrapping has to be more careful (tighter residual bounds, more training, possibly
-a different reward that penalizes residual magnitude) for the hybrid idea to work as
-intended. That's a legitimate, more nuanced conclusion than the original hypothesis,
-and worth presenting as such rather than forcing the data to fit H1.
+This is still a usable, honest result, and arguably a more interesting one than the
+original hypothesis would have been if confirmed: it shows classical PID's
+robustness advantage in concrete, measured terms (100% success everywhere tested vs.
+a hard failure boundary for both learned controllers), and narrows down *why* the
+hybrid idea didn't transfer here — not simply "undertrained," but a specific,
+physically-motivated miscalibration in how the residual's baseline action is computed
+relative to the true (randomized) mass.
 
 **H2 (sample efficiency)** — not yet evaluated with a proper steps-to-threshold
 comparison; the raw final-reward numbers in section 1 aren't a fair substitute (see
@@ -148,3 +215,14 @@ the reward-vs-timesteps curves from `results/ppo/evaluations.npz` and
   compared to a GPU-trained reference.
 - Single reference trajectory (document which) — results may not generalize to other
   trajectories.
+- Success rate is a binary outcome estimated from only 10 episodes per (controller,
+  mass) cell, so a reported rate of 0.0 or 1.0 could flip with a different random
+  seed at the boundary points (e.g. the ±10% transitions in section 3, and the
+  non-monotonic dip noted in section 3.1). The qualitative pattern (hard failure
+  below nominal mass, recovery above it) is large and consistent enough across
+  controllers to trust, but exact transition points should not be over-interpreted
+  with this sample size.
+- Single policy seed per controller (seed=0 in config/*.yaml) — a different training
+  seed could land in a different region of this failure landscape; the finding here
+  is about this specific trained policy, not a guarantee about PPO/Hybrid in general
+  on this task.

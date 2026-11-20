@@ -22,3 +22,20 @@ def build_waypoints(ctrl_freq_hz: int) -> np.ndarray:
         angle = (i / num_wp) * 2 * np.pi + np.pi / 2
         wp[i, :] = (R * np.cos(angle), R * np.sin(angle) - R, H)
     return wp
+
+
+# Shared "crash" definition used identically by every evaluation path (PID in
+# scripts/run_pid_baseline.py, PPO/Hybrid in scripts/evaluate_robustness.py),
+# so "success rate" means the same thing regardless of which environment
+# class produced the episode. Thresholds match
+# src/envs/traj_track_aviary.py's TrajTrackAviary._computeTruncated exactly,
+# so a PPO/Hybrid episode that truncates early is, by construction, one that
+# trips this same condition — this function just makes that check explicit
+# and lets the PID path (which runs in CtrlAviary, which never truncates on
+# its own) apply the identical standard.
+def is_out_of_bounds(state: np.ndarray) -> bool:
+    """`state` is the raw (20,)-shaped vector from BaseAviary._getDroneStateVector:
+    position at [0:3], roll/pitch at [7:9].
+    """
+    return (abs(state[0]) > 2.0 or abs(state[1]) > 2.0 or state[2] > 2.0
+            or abs(state[7]) > .6 or abs(state[8]) > .6)

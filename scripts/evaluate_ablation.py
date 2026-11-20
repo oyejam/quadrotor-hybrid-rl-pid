@@ -65,7 +65,8 @@ def main():
     file_exists = os.path.exists(args.output)
     with open(args.output, "a", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=["controller", "mass_scale", "episode",
-                                               "rmse", "mean_error", "max_error"])
+                                               "rmse", "mean_error", "max_error",
+                                               "episode_length", "success"])
         if not file_exists:
             writer.writeheader()
         writer.writerows(rows)
