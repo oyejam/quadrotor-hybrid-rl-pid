@@ -5,7 +5,10 @@
 
 ## Description of the Conducted Research
 
-See [docs/research_plan.md](docs/research_plan.md) for the full problem statement, hypothesis, and methodology, and [docs/results.md](docs/results.md) for results once experiments are complete.
+See [docs/literature_review.md](docs/literature_review.md) for the analytical review of
+prior work, [docs/research_plan.md](docs/research_plan.md) for the problem statement,
+hypothesis, and methodology, and [docs/results.md](docs/results.md) for experimental
+results.
 
 **Short summary (fill in once work starts):**
 This project compares three quadrotor trajectory-tracking controllers — a classical PID
