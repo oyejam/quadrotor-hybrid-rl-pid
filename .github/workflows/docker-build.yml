@@ -1,0 +1,24 @@
+# Builds the Dockerfile and runs its default smoke test on every push, on
+# GitHub's own Linux runners. This exists because the project's own dev
+# machine (an Intel 2015 MacBook Air, capped at macOS 12 Monterey) cannot
+# run Docker Desktop at all -- current Docker Desktop requires macOS 13+ --
+# so this is the actual verification that the Dockerfile works, not a
+# local one.
+name: Docker build
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-and-smoke-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image
+        run: docker build -t quadrotor-hybrid-rl-pid .
+
+      - name: Run default smoke test (PID baseline, one episode)
+        run: docker run --rm quadrotor-hybrid-rl-pid
