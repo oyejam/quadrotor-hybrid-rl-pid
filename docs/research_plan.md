@@ -145,3 +145,10 @@ comparison).
   timestep budget (e.g. 200k-1M steps, tuned empirically) is sufficient.
 - **Reproducibility.** Fix and record all random seeds; log exact package versions in
   `requirements.txt`.
+- **Docker reproducibility couldn't be verified locally.** This dev machine's hardware
+  (2015 MacBook Air, `MacBookAir7,2`) is capped by Apple at macOS 12 (Monterey);
+  Docker Desktop, and the lighter alternatives checked (Colima, Podman), all now
+  require macOS 13+. Mitigated with CI instead of a local workaround: see README.md's
+  Docker section and `.github/workflows/docker-build.yml`, which build the image and
+  run its smoke test on GitHub's Linux runners on every push — genuine verification on
+  real infrastructure, not a locally-untested Dockerfile.

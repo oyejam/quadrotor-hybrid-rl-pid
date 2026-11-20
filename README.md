@@ -1,5 +1,7 @@
 # Hybrid Reinforcement Learning and Residual PID for Quadrotor Trajectory Tracking
 
+[![Docker build](https://github.com/oyejam/quadrotor-hybrid-rl-pid/actions/workflows/docker-build.yml/badge.svg)](https://github.com/oyejam/quadrotor-hybrid-rl-pid/actions/workflows/docker-build.yml)
+
 ## Participants
 - Jamiu Olaide Oyetunde — ISU/ITMO ID: 520194
 
@@ -97,6 +99,22 @@ container (trained models, CSVs, plots) to persist on the host afterward.
 Note: `pybullet==3.2.7` has no published wheel for Python 3.12 on any platform yet, so
 `docker build` compiles it from source the first time — expect that step alone to take
 a few minutes. Every other pinned dependency installs from a prebuilt wheel.
+
+**This project's own dev machine cannot run Docker at all**, so the Dockerfile is
+verified a different way. Docker Desktop requires macOS 13 (Ventura) or newer; this is
+a 2015 MacBook Air (model `MacBookAir7,2`) that Apple capped at macOS 12 (Monterey) —
+Ventura was never released for this hardware. The lighter alternatives (Colima,
+Podman) hit the same macOS-13+ floor, so this isn't fixable by picking different
+tooling, and installing an unofficial OS patcher to work around Apple's own hardware
+support cutoff was judged not worth the risk on a 10-year-old machine.
+
+Instead, [`.github/workflows/docker-build.yml`](.github/workflows/docker-build.yml)
+builds the image and runs its default smoke test on GitHub's own Linux runners on
+every push (that's what the badge at the top of this README reflects) — real
+verification on real infrastructure, independent of what this machine can run. Its
+last confirmed run reproduced `RMSE=0.0896m` for the PID baseline at nominal mass,
+matching this machine's own local result (`0.0904m`) to within normal floating-point
+variation across different CPUs.
 
 **The image intentionally pins the exact same package versions as the venv setup**
 (not newer ones), so a result reproduced via Docker is reproducing the same
