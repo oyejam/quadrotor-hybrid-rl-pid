@@ -131,12 +131,16 @@ improve a PID controller's robustness to unmodeled *mass* perturbation, under a
 constrained (CPU-only, raw-actuator-level) training setup — is not directly answered
 by the closest prior work (Shu et al. 2023), which tests a different disturbance type
 (wind) on a different residual level (cascaded, not raw-motor) with evidently more
-training resources. This project's negative result for H1 (docs/research_plan.md,
-docs/results.md §3-4) is therefore a useful, concrete data point narrowing where the
+training resources. This project's result for H1 is a sharper negative than initially
+estimated: once episode success was tracked explicitly (not just RMSE), both PPO and
+the hybrid controller turned out to fail to complete the reference trajectory at all
+on essentially every episode with mass at or below the value they were centered on
+during training, recovering only once the true mass exceeded it (docs/results.md
+§3-4). That is a concrete, measured data point narrowing where the
 residual-RL-on-classical-control idea does and doesn't straightforwardly transfer,
 rather than a refutation of the broader idea — the gap is plausibly in *how* the
-residual was applied and *how much* it was trained, not in the underlying hybrid
-concept.
+residual's baseline action is computed relative to the true (randomized) mass and
+*how much* it was trained, not in the underlying hybrid concept.
 
 ## Sources
 

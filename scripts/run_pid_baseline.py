@@ -20,7 +20,7 @@ import pybullet as p
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from src.traj import build_waypoints
+from src.traj import build_waypoints, is_out_of_bounds
 
 from gym_pybullet_drones.envs.CtrlAviary import CtrlAviary
 from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
@@ -44,12 +44,14 @@ def run_episode(mass_scale: float = 1.0, ctrl_freq: int = 48, pyb_freq: int = 24
                           physicsClientId=env.CLIENT)
 
     errors = np.zeros(num_wp)
+    crashed = False
     action = np.zeros((1, 4))
     for i in range(num_wp):
         obs, reward, terminated, truncated, info = env.step(action)
         state = obs[0]
         target = wp[i, :]
         errors[i] = np.linalg.norm(state[0:3] - target)
+        crashed = crashed or is_out_of_bounds(state)
         action[0, :], _, _ = ctrl.computeControlFromState(
             control_timestep=env.CTRL_TIMESTEP, state=state, target_pos=target)
     env.close()
@@ -59,6 +61,8 @@ def run_episode(mass_scale: float = 1.0, ctrl_freq: int = 48, pyb_freq: int = 24
         "rmse": float(np.sqrt(np.mean(errors ** 2))),
         "mean_error": float(errors.mean()),
         "max_error": float(errors.max()),
+        "episode_length": num_wp,
+        "success": not crashed,
     }
 
 
@@ -73,7 +77,8 @@ if __name__ == "__main__":
     result = run_episode(mass_scale=args.mass_scale, gui=args.gui)
     print(f"[PID baseline] mass_scale={result['mass_scale']:.2f}  "
           f"RMSE={result['rmse']:.4f} m  mean_error={result['mean_error']:.4f} m  "
-          f"max_error={result['max_error']:.4f} m")
+          f"max_error={result['max_error']:.4f} m  success={result['success']}  "
+          f"episode_length={result['episode_length']}")
 
     out_dir = os.path.dirname(args.output)
     if out_dir:
@@ -81,5 +86,6 @@ if __name__ == "__main__":
     write_header = not os.path.exists(args.output)
     with open(args.output, "a") as f:
         if write_header:
-            f.write("mass_scale,rmse,mean_error,max_error\n")
-        f.write(f"{result['mass_scale']},{result['rmse']},{result['mean_error']},{result['max_error']}\n")
+            f.write("mass_scale,rmse,mean_error,max_error,episode_length,success\n")
+        f.write(f"{result['mass_scale']},{result['rmse']},{result['mean_error']},"
+                f"{result['max_error']},{result['episode_length']},{result['success']}\n")
