@@ -20,6 +20,23 @@ longer-surviving policy in the same budget, that is direct evidence for H2 (the 
 term reduces the exploration burden). Needs the Hybrid run to compare against before
 drawing conclusions.
 
+**Hybrid run log (2026-11-20):** 500,000 timesteps (503,808 actual), 2 parallel envs,
+~1582s wall-clock (~318 steps/sec, slower than PPO's ~420 due to the per-step PID
+computation in the wrapper). Final eval: mean reward -149.3 ± 108.9, mean episode
+length 263/480 steps.
+
+Raw numbers are **not directly comparable to PPO's** here: `episode_reward` is a sum
+over the episode, and Hybrid's episodes ran much longer (263 vs 176 steps) before
+truncating, so a larger (more negative) total is expected even if per-step tracking is
+similar or better. Normalizing: PPO ≈ -0.43 reward/step, Hybrid ≈ -0.57 reward/step —
+on this raw per-step basis PPO looks slightly better, not worse. But Hybrid surviving
+~50% longer before truncating (going too far off-course or tilting too much) is itself
+meaningful: it suggests the PID floor keeps the drone within bounds for longer, even
+if the exact position tracking during training wasn't tighter. This is exactly why the
+formal comparison uses RMSE over a fixed one-lap trajectory (`evaluate_robustness.py`),
+not this raw cumulative training-eval reward — see section 3 below for the actual
+hypothesis test.
+
 ## 2. In-distribution tracking accuracy
 Position RMSE for PID / PPO / Hybrid at the nominal mass and within the training DR
 range (±10%).
