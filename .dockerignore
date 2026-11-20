@@ -1,0 +1,27 @@
+# Keep the build context small and make sure the image does its own fresh
+# clone of gym-pybullet-drones rather than reusing whatever happens to be
+# on the host (mirrors .gitignore, plus .git itself).
+.git
+external/
+.venv/
+venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+.ipynb_checkpoints/
+
+# Model weights / logs / large artifacts -- regenerable, not needed to build
+*.zip
+*.pt
+*.pth
+*.h5
+*.log
+results/*/tb/
+results/recording_*/
+results/_demo_frames/
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/
