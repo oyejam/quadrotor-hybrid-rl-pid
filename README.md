@@ -26,13 +26,13 @@ crashes immediately can show an artificially low error).
 
 ## Demonstration (Video)
 
-<video src="results/demo.mp4" controls width="640">
-  Your viewer doesn't support inline video — direct link:
-  https://raw.githubusercontent.com/oyejam/quadrotor-hybrid-rl-pid/main/results/demo.mp4
-</video>
+![Demo: PID vs PPO vs Hybrid under mass perturbation](results/demo.gif)
 
-Direct link (mandatory per course requirements):
+**Direct link to the full video, with sound-free native playback and controls (mandatory
+per course requirements):**
 https://raw.githubusercontent.com/oyejam/quadrotor-hybrid-rl-pid/main/results/demo.mp4
+(GitHub's README renderer strips `<video>` tags for security reasons, so the GIF above
+is the inline preview; click the link for the real video file.)
 
 27-second clip recorded headless on this project's own CPU-only machine
 (`scripts/record_demo.py`), showing: PID tracking reliably at 70% of nominal mass, PPO
