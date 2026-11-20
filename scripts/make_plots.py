@@ -42,7 +42,8 @@ def main():
         grouped[r["controller"]][float(r["mass_scale"])].append(float(r["rmse"]))
 
     fig, ax = plt.subplots(figsize=(7, 5))
-    colors = {"pid": "tab:blue", "ppo": "tab:orange", "hybrid": "tab:green"}
+    colors = {"pid": "tab:blue", "ppo": "tab:orange", "hybrid": "tab:green",
+              "hybrid_tight_clip": "tab:red"}
     for controller, by_mass in grouped.items():
         mass_scales = sorted(by_mass.keys())
         means = np.array([np.mean(by_mass[m]) for m in mass_scales])
