@@ -8,6 +8,18 @@ the Obtained Results" section (link here, don't duplicate).
 - Hybrid: episode reward vs. timesteps (from `results/hybrid/evaluations.npz`)
 - Compare sample efficiency (H2): steps to reach a fixed reward/RMSE threshold.
 
+**PPO run log (2026-11-20):** 500,000 timesteps (503,808 actual, PPO completes full
+rollouts), 2 parallel envs, ~1199s wall-clock (~420 steps/sec) on this CPU-only
+machine. Final eval: mean reward -75.2 ± 67.5, mean episode length 176/480 steps.
+The large variance and short mean episode length (well under the 480-step full
+trajectory) suggest the policy frequently triggers the truncation condition (flies
+too far off-course or tilts too much) before completing a lap — raw-RPM control is a
+genuinely hard RL problem to learn from scratch in this budget. This is itself a
+relevant data point for the hybrid comparison: if Hybrid converges to a lower-variance,
+longer-surviving policy in the same budget, that is direct evidence for H2 (the PID
+term reduces the exploration burden). Needs the Hybrid run to compare against before
+drawing conclusions.
+
 ## 2. In-distribution tracking accuracy
 Position RMSE for PID / PPO / Hybrid at the nominal mass and within the training DR
 range (±10%).
