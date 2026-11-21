@@ -10,7 +10,7 @@ PyBullet rigid body's mass is scaled by a factor drawn uniformly from
 (`self.M`, used by gym_pybullet_drones to compute HOVER_RPM and by the PID
 gains) is left at the nominal value. This reproduces "the physical drone is
 heavier/lighter than the controller assumes" without changing what the policy
-observes — exactly the scenario docs/research_plan.md tests.
+observes. This is exactly the scenario docs/research_plan.md tests.
 """
 import numpy as np
 import pybullet as p

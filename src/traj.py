@@ -30,7 +30,7 @@ def build_waypoints(ctrl_freq_hz: int) -> np.ndarray:
 # class produced the episode. Thresholds match
 # src/envs/traj_track_aviary.py's TrajTrackAviary._computeTruncated exactly,
 # so a PPO/Hybrid episode that truncates early is, by construction, one that
-# trips this same condition — this function just makes that check explicit
+# trips this same condition. This function just makes that check explicit
 # and lets the PID path (which runs in CtrlAviary, which never truncates on
 # its own) apply the identical standard.
 def is_out_of_bounds(state: np.ndarray) -> bool:

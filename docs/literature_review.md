@@ -9,7 +9,7 @@ gap this project's experiment addresses.
 ## 1. Classical control (PID) for quadrotor trajectory tracking
 
 PID and cascaded-PID controllers remain the default for quadrotor low-level control:
-well understood, computationally cheap, and — critically for this project — robust
+well understood, computationally cheap, and, critically for this project, robust
 to parameter uncertainty without needing to be retrained. Their robustness comes from
 being a *reactive* feedback law (correcting the currently observed error) rather than
 a *learned mapping* from state to action that implicitly encodes assumptions about the
@@ -20,8 +20,8 @@ tuned the gains for the nominal system.
 ## 2. Pure RL for quadrotor control
 
 End-to-end RL policies (PPO, SAC, TD3, etc.) that output raw motor commands have been
-shown to match or exceed hand-tuned PID in specific regimes — e.g. aggressive
-maneuvers or wind rejection — by exploiting learned nonlinear corrections a linear PID
+shown to match or exceed hand-tuned PID in specific regimes (e.g. aggressive
+maneuvers or wind rejection) by exploiting learned nonlinear corrections a linear PID
 law cannot express [Hsiao 2019](https://web.stanford.edu/class/aa228/reports/2019/final62.pdf);
 [Reinforcement Learning-Based Control of CrazyFlie 2.X](https://arxiv.org/pdf/2306.03951).
 However, comparative studies also report the opposite: PID giving "much smoother
@@ -29,7 +29,7 @@ control... and smoother action outputs" than PPO/A2C on the same task
 ([Comparison of Traditional Optimal Control Methodologies to RL Agents in Quadcopter
 Attitude Control](https://www.researchgate.net/publication/363736123_Comparison_of_Traditional_Optimal_Control_Methodologies_to_Reinforcement_Learning_Agents_in_Quadcopter_Attitude_Control_Applications)).
 The field's conclusion is mixed and condition-dependent, not a clean win for either
-side — which is itself one of the reasons a controlled, apples-to-apples comparison
+side, which is itself one of the reasons a controlled, apples-to-apples comparison
 (as attempted here) is worth running rather than relying on a prior result from a
 different setup.
 
@@ -44,8 +44,8 @@ reference trajectory within a 500k-timestep CPU-only budget.
 
 ## 3. Residual / hybrid RL on top of classical control
 
-The approach this project implements — an RL policy that learns a bounded *residual*
-correction added to a classical controller's output, rather than replacing it — was
+The approach this project implements, an RL policy that learns a bounded *residual*
+correction added to a classical controller's output rather than replacing it, was
 established by two foundational papers: residual policy learning
 ([Silver et al. 2018](https://arxiv.org/pdf/2106.08050) builds on this; original is
 arXiv:1812.06298) and
@@ -69,7 +69,7 @@ Follow-on work has generally reported positive results for this architecture:
 
 That last point is the key tension this project's results surface. Shu et al. found
 residual-RL-on-PID *robust* to mass variation far outside their training distribution;
-this project's own mass-perturbation sweep (docs/results.md §3) found the opposite —
+this project's own mass-perturbation sweep (docs/results.md §3) found the opposite:
 the hybrid controller was the *least* robust of the three tested, including inside
 its own training DR range. Three plausible reasons for the discrepancy:
 
@@ -79,11 +79,11 @@ its own training DR range. Three plausible reasons for the discrepancy:
    RPM commands (ActionType.RPM in `gym_pybullet_drones`), the lowest and least
    structured level in the stack. A residual at a higher level of abstraction has a
    smaller, more semantically meaningful space to search and is plausibly easier to
-   learn robustly than one at the raw-actuator level — consistent with the
+   learn robustly than one at the raw-actuator level, consistent with the
    sample-efficiency literature in section 2.
 2. **Disturbance type.** Wind is an *additive* external force/torque the policy can
    learn to counter with a bounded correction. Mass scaling is a *multiplicative*
-   change to the plant's own dynamics (inertia, thrust-to-weight ratio) — the
+   change to the plant's own dynamics (inertia, thrust-to-weight ratio). The
    "correct" compensation is not a fixed-magnitude patch but a state-dependent
    rescaling, which may be fundamentally harder for a residual bounded to a fixed
    fraction of PID's output to represent, especially when undertrained.
@@ -97,13 +97,13 @@ its own training DR range. Three plausible reasons for the discrepancy:
 This project's domain-randomization limitation is also consistent with a known issue
 in the DR literature (below): a policy trained under DR is "limited to
 within-the-distribution scenarios," and this project's sharpest failure point for
-both learned controllers was right at +10% mass — the edge of the training
+both learned controllers was right at +10% mass, the edge of the training
 distribution, not deep outside it.
 
 ## 4. Domain randomization for sim-to-real robustness
 
-DR — training across a distribution of simulated dynamics parameters rather than one
-fixed value — is the standard tool for making a sim-trained policy robust to
+DR (training across a distribution of simulated dynamics parameters rather than one
+fixed value) is the standard tool for making a sim-trained policy robust to
 real-world parameter uncertainty, used directly in this project's methodology
 (docs/research_plan.md §4.3). It has demonstrated real transfer success for
 quadrotors, including zero-shot sim-to-multi-real transfer across different physical
@@ -115,7 +115,7 @@ cross-platform racing policies
 The literature also documents DR's known failure modes, both observed in this
 project's own results:
 - Policies trained with DR remain reliable mainly *within* the training distribution,
-  with no guarantee of graceful degradation just outside it — consistent with this
+  with no guarantee of graceful degradation just outside it, which matches this
   project's sharp error spike exactly at the training range's edge (+10% mass) rather
   than a smooth, monotonic degradation further out.
 - Relying on DR alone (rather than, say, online adaptation) can push a policy toward
@@ -125,9 +125,9 @@ project's own results:
 
 ## 5. Where this project sits
 
-The specific question this project investigates — does residual RL preserve or
-improve a PID controller's robustness to unmodeled *mass* perturbation, under a
-constrained (CPU-only, raw-actuator-level) training setup — is not directly answered
+The specific question this project investigates, whether residual RL preserves or
+improves a PID controller's robustness to unmodeled *mass* perturbation under a
+constrained (CPU-only, raw-actuator-level) training setup, is not directly answered
 by the closest prior work (Shu et al. 2023), which tests a different disturbance type
 (wind) on a different residual level (cascaded, not raw-motor) with more training
 resources. The result for H1 turned out to be a sharper negative than the first pass
@@ -137,7 +137,7 @@ essentially every episode with mass at or below the value they were centered on
 during training, recovering only once the true mass exceeded it (docs/results.md
 §3-4). That is a concrete, measured data point narrowing where the
 residual-RL-on-classical-control idea does and doesn't straightforwardly transfer,
-rather than a refutation of the broader idea — the gap is plausibly in *how* the
+rather than a refutation of the broader idea. The gap is plausibly in *how* the
 residual's baseline action is computed relative to the true (randomized) mass and
 *how much* it was trained, not in the underlying hybrid concept.
 

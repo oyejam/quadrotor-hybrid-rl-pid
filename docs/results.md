@@ -98,7 +98,7 @@ instability when the drone is lighter, and more forgiving when it's heavier. PID
 not have this problem because it reacts to the currently measured error rather than
 applying a fixed-mass-calibrated baseline action.
 
-**RMSE, unconditional (all episodes, including crashed ones — what was originally
+**RMSE, unconditional (all episodes, including crashed ones, what was originally
 reported):**
 
 | mass_scale | PID | PPO | Hybrid (clip=0.2) | Hybrid (clip=0.08) |
@@ -111,7 +111,7 @@ reported):**
 | 1.20 | 0.100 | 0.447 | 0.435 | 0.434 |
 | 1.30 | 0.109 | 0.434 | 0.432 | 0.432 |
 
-**RMSE, conditional on success only (N/A = zero successful episodes at that point —
+**RMSE, conditional on success only (N/A = zero successful episodes at that point;
 the only version of this table that is a fair tracking-quality comparison):**
 
 | mass_scale | PID | PPO | Hybrid (clip=0.2) | Hybrid (clip=0.08) |
@@ -140,7 +140,7 @@ drone mass without reliably inheriting PID's floor.
 
 Section 4 flagged `residual_clip_fraction=0.2` as a likely cause and proposed testing
 a tighter bound. Ran the identical setup with `residual_clip_fraction=0.08`
-(`config/hybrid_tight_clip.yaml`, everything else unchanged) — see the 4-column
+(`config/hybrid_tight_clip.yaml`, everything else unchanged). See the 4-column
 tables in section 3 above for the full comparison.
 
 Tightening the clip produced one specific improvement: the tight-clip hybrid is the
@@ -164,7 +164,7 @@ first suggested. The predicted mechanism was that the PID term gives the hybrid 
 stability floor the residual builds on. Instead, both the hybrid and plain PPO fail
 to complete the trajectory at all across most of the tested mass range, not just
 track it worse. Causes investigated:
-- ~~`residual_clip_fraction=0.2` may simply be too large~~ — tested in section 3.1. A
+- ~~`residual_clip_fraction=0.2` may simply be too large~~: tested in section 3.1. A
   tighter 0.08 clip fixed reliability at nominal mass but left the broader asymmetric
   failure unresolved, so the clip bound is a partial cause at most.
 - **Leading hypothesis (section 3):** the fixed-nominal-mass `HOVER_RPM` baseline in
@@ -173,7 +173,7 @@ track it worse. Causes investigated:
   matches the sharp success-rate transition at the nominal-mass boundary for both
   PPO and Hybrid.
 - 500k timesteps on CPU may not be enough for the hybrid policy to learn a refinement
-  of PID rather than noisy interference — raw-RPM control is already a hard RL
+  of PID rather than noisy interference. Raw-RPM control is already a hard RL
   problem to learn cleanly in this budget (see section 1).
 - The non-monotonic success dip at +10% for the tight-clip hybrid (section 3.1) may
   be a genuine edge-of-distribution effect or partly sampling noise from only 10
@@ -185,7 +185,7 @@ learned controllers. It also narrows down why the hybrid idea didn't transfer he
 not simply undertraining, but a specific, physically-motivated miscalibration in how
 the residual's baseline action is computed relative to the true mass.
 
-**H2 (sample efficiency)** — not yet evaluated with a proper steps-to-threshold
+**H2 (sample efficiency):** not yet evaluated with a proper steps-to-threshold
 comparison; the raw final-reward numbers in section 1 aren't a fair substitute (see
 that section's caveat about episode-length normalization). Left as follow-up: extract
 the reward-vs-timesteps curves from `results/ppo/evaluations.npz` and
@@ -193,9 +193,9 @@ the reward-vs-timesteps curves from `results/ppo/evaluations.npz` and
 
 ## 5. Limitations
 - Training budget was CPU-only (document actual total timesteps used, wall-clock time,
-  number of parallel envs) — note how this may affect how well PPO/Hybrid converged
+  number of parallel envs). Note how this may affect how well PPO/Hybrid converged
   compared to a GPU-trained reference.
-- Single reference trajectory (document which) — results may not generalize to other
+- Single reference trajectory (document which): results may not generalize to other
   trajectories.
 - Success rate is a binary outcome estimated from only 10 episodes per (controller,
   mass) cell, so a reported rate of 0.0 or 1.0 could flip with a different random
@@ -204,7 +204,7 @@ the reward-vs-timesteps curves from `results/ppo/evaluations.npz` and
   below nominal mass, recovery above it) is large and consistent enough across
   controllers to trust, but exact transition points should not be over-interpreted
   with this sample size.
-- Single policy seed per controller (seed=0 in config/*.yaml) — a different training
+- Single policy seed per controller (seed=0 in config/*.yaml): a different training
   seed could land in a different region of this failure landscape; the finding here
   is about this specific trained policy, not a guarantee about PPO/Hybrid in general
   on this task.

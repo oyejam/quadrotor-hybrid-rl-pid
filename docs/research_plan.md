@@ -12,8 +12,8 @@ RL policy, or a hybrid of the two. Each has known trade-offs:
   PID output. The idea is the PID term keeps the system roughly stable and sample
   efficient, while the residual lets it adapt beyond what fixed PID gains can do.
 
-Domain Randomization (DR) — training with randomized dynamics parameters (mass,
-inertia, drag, etc.) — is the standard tool for making a policy robust to real-world
+Domain Randomization (DR), training with randomized dynamics parameters (mass,
+inertia, drag, etc.), is the standard tool for making a policy robust to real-world
 parameter uncertainty. This project tests whether DR benefits all three controller types
 equally, or whether the hybrid structure gets disproportionately more robustness per
 unit of training.
@@ -38,20 +38,20 @@ scratch to the same threshold, because the PID term reduces the exploration burd
    gap remain that only the hybrid structure closes?
 3. How does sample efficiency (environment steps to reach a target RMSE) compare
    between PPO-from-scratch and the hybrid residual policy?
-4. Where does the hybrid controller fail relative to PID — is the learned residual ever
+4. Where does the hybrid controller fail relative to PID? Is the learned residual ever
    actively harmful (makes tracking worse than plain PID) in some part of the test range?
 
 ## 4. Methodology
 
 ### 4.1 Environment
 `gym-pybullet-drones` (CF2X quadrotor model), trajectory-tracking task (e.g. figure-8
-or waypoint sequence — pick one fixed reference trajectory used identically across all
+or waypoint sequence; pick one fixed reference trajectory used identically across all
 three controllers and all experiments).
 
 ### 4.2 Controllers under test
 | Controller | Description | Training |
 |---|---|---|
-| PID | Built-in `DSLPIDControl` from gym-pybullet-drones, gains left at library defaults (document them) | No training — scripted baseline |
+| PID | Built-in `DSLPIDControl` from gym-pybullet-drones, gains left at library defaults (document them) | No training, scripted baseline |
 | PPO | `stable-baselines3` PPO policy mapping state → motor RPM / attitude command directly | Train from scratch with PPO |
 | Hybrid | PPO policy outputs a bounded residual added to the PID controller's output | Train from scratch with PPO, PID term held fixed |
 
@@ -79,8 +79,8 @@ step-to-step dynamics, reset randomness) rather than conflating it with the poli
 randomly sampling different actions for the same state.
 
 **Crash/success definition:** "success" means the episode never triggers
-`src/traj.py`'s `is_out_of_bounds(state)` — position more than 2m from origin in x/y,
-altitude above 2m, or roll/pitch beyond 0.6 rad — matching the exact bounds
+`src/traj.py`'s `is_out_of_bounds(state)` (position more than 2m from origin in x/y,
+altitude above 2m, or roll/pitch beyond 0.6 rad), matching the exact bounds
 `TrajTrackAviary._computeTruncated` uses to end an RL episode early. The PID baseline
 runs in `CtrlAviary`, which has no such built-in truncation, so `run_pid_baseline.py`
 checks the identical condition manually at every step so "success" means the same
@@ -100,7 +100,7 @@ conditional on success (the only version that's actually a fair tracking-quality
 comparison).
 
 ### 4.5 Metrics
-- Position RMSE over the episode (primary metric) — **report both unconditional and
+- Position RMSE over the episode (primary metric): **report both unconditional and
   conditional-on-success**, since the two can tell very different stories (see above)
 - Success rate (episode completed without crash/instability, under a defined threshold)
 - Settling time / max transient error (secondary)
