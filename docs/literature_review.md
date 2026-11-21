@@ -62,7 +62,7 @@ Follow-on work has generally reported positive results for this architecture:
   using Residual RL** ([Shu et al. 2023](https://arxiv.org/abs/2308.01648)) is the
   closest prior work to this project's architecture: a residual RL policy on top of
   cascaded PID for a real quadcopter. They report ~50% position-deviation reduction
-  over PID alone under wind disturbance, and — notably for this project — state that
+  over PID alone under wind disturbance, and state that
   **the trained controller "preserves its performance even when the quadcopter's
   mass and propeller's lift coefficient is changed between 50% to 150% from original
   training time."**
@@ -71,8 +71,7 @@ That last point is the key tension this project's results surface. Shu et al. fo
 residual-RL-on-PID *robust* to mass variation far outside their training distribution;
 this project's own mass-perturbation sweep (docs/results.md §3) found the opposite —
 the hybrid controller was the *least* robust of the three tested, including inside
-its own training DR range. Plausible reasons for the discrepancy, worth stating
-explicitly rather than treating as a contradiction to paper over:
+its own training DR range. Three plausible reasons for the discrepancy:
 
 1. **Where the residual acts.** Shu et al.'s residual corrects a *cascaded* PID
    structure (position loop → attitude loop → motor mixing), likely at an
@@ -130,11 +129,11 @@ The specific question this project investigates — does residual RL preserve or
 improve a PID controller's robustness to unmodeled *mass* perturbation, under a
 constrained (CPU-only, raw-actuator-level) training setup — is not directly answered
 by the closest prior work (Shu et al. 2023), which tests a different disturbance type
-(wind) on a different residual level (cascaded, not raw-motor) with evidently more
-training resources. This project's result for H1 is a sharper negative than initially
-estimated: once episode success was tracked explicitly (not just RMSE), both PPO and
-the hybrid controller turned out to fail to complete the reference trajectory at all
-on essentially every episode with mass at or below the value they were centered on
+(wind) on a different residual level (cascaded, not raw-motor) with more training
+resources. The result for H1 turned out to be a sharper negative than the first pass
+of the analysis showed: once episode success was tracked, not just RMSE, both PPO and
+the hybrid controller failed to complete the reference trajectory at all on
+essentially every episode with mass at or below the value they were centered on
 during training, recovering only once the true mass exceeded it (docs/results.md
 §3-4). That is a concrete, measured data point narrowing where the
 residual-RL-on-classical-control idea does and doesn't straightforwardly transfer,
