@@ -3,7 +3,7 @@
 [![Docker build](https://github.com/oyejam/quadrotor-hybrid-rl-pid/actions/workflows/docker-build.yml/badge.svg)](https://github.com/oyejam/quadrotor-hybrid-rl-pid/actions/workflows/docker-build.yml)
 
 ## Participants
-- Jamiu Olaide Oyetunde — ISU/ITMO ID: 520194
+- Jamiu Olaide Oyetunde, ISU/ITMO ID: 520194
 
 ## Description of the Conducted Research
 
@@ -29,7 +29,7 @@ ablation and a correction to an evaluation bug in an earlier pass, is in
 
 Full video: https://raw.githubusercontent.com/oyejam/quadrotor-hybrid-rl-pid/main/results/demo.mp4
 
-(GIF above is a preview — GitHub doesn't embed a video player from a plain file link.)
+(GIF above is a preview. GitHub doesn't embed a video player from a plain file link.)
 
 27-second clip (`scripts/record_demo.py`, recorded headless on a CPU-only machine):
 PID tracking reliably at 70% of nominal mass, PPO crashing almost immediately at
@@ -40,7 +40,7 @@ fixed) succeeding at nominal mass.
 
 ## Installation and Deployment
 
-Developed and trained entirely on a local CPU-only machine (no GPU) — PID baseline,
+Developed and trained entirely on a local CPU-only machine (no GPU). PID baseline,
 PPO and hybrid training, evaluation, and the demo video all ran there.
 
 Python 3.12, required by the current `gym-pybullet-drones` release (it depends on
@@ -92,7 +92,7 @@ Mount `results/` (as in the last example) to keep artifacts written inside the
 container on the host afterward.
 
 `pybullet==3.2.7` has no Python 3.12 wheel yet, so the first build compiles it from
-source — that step alone takes a few minutes. Everything else installs from a
+source, and that step alone takes a few minutes. Everything else installs from a
 prebuilt wheel.
 
 This machine can't run Docker itself: Docker Desktop needs macOS 13+, and this is a
@@ -129,4 +129,4 @@ plots, and discussion: [docs/results.md](docs/results.md). Raw data:
 [results/success_rate_plot.png](results/success_rate_plot.png).
 
 ## License
-MIT — see [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE).

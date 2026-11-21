@@ -72,7 +72,7 @@ def main():
 
     # --- Success-rate plot (fraction of episodes that never went out of bounds) ---
     if not all("success" in r for r in rows):
-        print("[make_plots] 'success' column missing from CSV (old format) — "
+        print("[make_plots] 'success' column missing from CSV (old format), "
               "skipping success-rate plot. Re-run scripts/evaluate_robustness.py.")
         return
 

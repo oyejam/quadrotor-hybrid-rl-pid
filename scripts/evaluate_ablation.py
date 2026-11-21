@@ -45,7 +45,7 @@ def main():
     args = parser.parse_args()
 
     if not os.path.exists(args.model):
-        raise FileNotFoundError(f"{args.model} not found — train it first.")
+        raise FileNotFoundError(f"{args.model} not found. Train it first.")
 
     cfg = load_config(args.config)
     model = PPO.load(args.model)

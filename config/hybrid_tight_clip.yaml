@@ -16,7 +16,7 @@ domain_randomization:
   mass_scale_range: [0.9, 1.1]
 
 hybrid:
-  residual_clip_fraction: 0.08    # tightened from 0.2 — the ablation variable
+  residual_clip_fraction: 0.08    # tightened from 0.2, the ablation variable
   pid_drone_model: cf2x
 
 training:

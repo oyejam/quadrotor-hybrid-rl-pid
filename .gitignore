@@ -34,7 +34,7 @@ wandb/
 .idea/
 .vscode/
 
-# Data (keep folder, ignore contents — document download in data/README.md)
+# Data (keep folder, ignore contents: document download in data/README.md)
 data/*
 !data/.gitkeep
 !data/README.md

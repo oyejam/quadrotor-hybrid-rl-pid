@@ -1,5 +1,5 @@
 # Pinned for Python 3.12 on Intel macOS (no official PyPI torch wheels beyond
-# 2.2.2 for this platform at time of writing — see README's Installation
+# 2.2.2 for this platform at time of writing. See README's Installation
 # section for why stable-baselines3 is also pinned below its latest release).
 # `gym-pybullet-drones` itself is installed separately from a git clone, see
 # README.md -> Installation and Deployment.
