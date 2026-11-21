@@ -70,7 +70,7 @@ Run N episodes (e.g. N=10) per mass value per controller to get a mean ± std, s
 PyBullet contact/dynamics has some stochasticity and PPO/Hybrid policies are stochastic
 at inference unless you force deterministic actions (decide and document which).
 
-**Decision (resolved):** evaluation uses deterministic actions
+**Decision:** evaluation uses deterministic actions
 (`model.predict(obs, deterministic=True)`), for both PPO and Hybrid, throughout
 `scripts/evaluate_robustness.py` and `scripts/evaluate_ablation.py`. This removes the
 policy's own action-sampling noise as a source of run-to-run variance, so the 10
@@ -78,7 +78,7 @@ episodes per mass value measure variability from the environment (PyBullet
 step-to-step dynamics, reset randomness) rather than conflating it with the policy
 randomly sampling different actions for the same state.
 
-**Crash/success definition (resolved):** "success" means the episode never triggers
+**Crash/success definition:** "success" means the episode never triggers
 `src/traj.py`'s `is_out_of_bounds(state)` — position more than 2m from origin in x/y,
 altitude above 2m, or roll/pitch beyond 0.6 rad — matching the exact bounds
 `TrajTrackAviary._computeTruncated` uses to end an RL episode early. The PID baseline
@@ -88,9 +88,8 @@ thing for all three controllers regardless of which environment class produced t
 episode (see `scripts/run_pid_baseline.py` and `scripts/evaluate_robustness.py`'s
 `run_rl_episode`).
 
-**Important methodological note, found after initially shipping this evaluation
-without success tracking:** RMSE computed over a crashed/truncated episode is *not*
-directly comparable to RMSE over a completed one — a policy that crashes almost
+**Important methodological note:** RMSE computed over a crashed/truncated episode
+isn't directly comparable to RMSE over a completed one. A policy that crashes almost
 immediately near the start of the trajectory can show an artificially low RMSE simply
 because it's averaged over very few, easy, near-the-start steps, not because it
 tracked well. Concretely: PPO's apparently-best RMSE (0.028m) at nominal mass turned
@@ -145,10 +144,8 @@ comparison).
   timestep budget (e.g. 200k-1M steps, tuned empirically) is sufficient.
 - **Reproducibility.** Fix and record all random seeds; log exact package versions in
   `requirements.txt`.
-- **Docker reproducibility couldn't be verified locally.** This dev machine's hardware
-  (2015 MacBook Air, `MacBookAir7,2`) is capped by Apple at macOS 12 (Monterey);
-  Docker Desktop, and the lighter alternatives checked (Colima, Podman), all now
-  require macOS 13+. Mitigated with CI instead of a local workaround: see README.md's
-  Docker section and `.github/workflows/docker-build.yml`, which build the image and
-  run its smoke test on GitHub's Linux runners on every push — genuine verification on
-  real infrastructure, not a locally-untested Dockerfile.
+- **Docker couldn't be verified locally.** This machine (2015 MacBook Air,
+  `MacBookAir7,2`) is capped by Apple at macOS 12 (Monterey); Docker Desktop, Colima,
+  and Podman all now require macOS 13+. `.github/workflows/docker-build.yml` builds
+  the image and runs the smoke test on GitHub's Linux runners on every push instead.
+  See README.md's Docker section.
