@@ -1,11 +1,29 @@
-# Phase 2: Scaling Up on the Lenovo Legion Y7000P
+# Phase 2: Scaling Up on the Second Machine
 
-This document is the plan for continuing the project on a second machine: a Lenovo
-Legion Y7000P with an Intel Core Ultra 7 255HX (20 cores, 20 threads) and an NVIDIA
-RTX 5060 (CUDA). All work described in docs/research_plan.md and docs/results.md was
-done on an Intel 2015 MacBook Air with 2 CPU cores and no GPU. This phase does not
-replace those results. It extends them, with the version differences stated plainly
-so the two are never confused.
+This document is the plan for continuing the project on a second machine. It was
+originally written for an anticipated Lenovo Legion Y7000P (Intel Core Ultra 7 255HX,
+20 cores/20 threads, NVIDIA RTX 5060). The machine actually used turned out to be a
+different laptop: an Intel Core i7-14650HX (16 cores, 24 threads) with an NVIDIA
+GeForce RTX 4050 Laptop GPU (6GB VRAM, Ada architecture, not Blackwell). The setup
+steps below did not need to change for this swap, only the specific numbers (core
+count for `n_envs`, VRAM headroom). All work described in docs/research_plan.md and
+docs/results.md was done on an Intel 2015 MacBook Air with 2 CPU cores and no GPU.
+This phase does not replace those results. It extends them, with the version
+differences stated plainly so the two are never confused.
+
+**Setup log (2026-11-25):** Python 3.12.10, MSVC Build Tools (C++ workload), and a
+project venv were installed on the actual machine above. `torch==2.11.0+cu128`
+installed from `download.pytorch.org/whl/cu128` and confirmed working
+(`torch.cuda.is_available()` → `True`, device name `NVIDIA GeForce RTX 4050 Laptop
+GPU`). `pybullet` built from source (no Python 3.12 wheel yet, same situation as the
+Mac). `gym-pybullet-drones` was cloned into `external/` and installed **with**
+`--no-deps`, contrary to section 3 step 7 below: its `pyproject.toml` pins
+`torch = "^2.13"`, but the CUDA 12.8 wheel index's latest build at install time was
+only `2.11.0+cu128`. Installing without `--no-deps` would have had pip satisfy that
+pin from the default PyPI index instead, silently replacing the verified CUDA build
+with a non-CUDA one. Smoke test (`scripts/run_pid_baseline.py`) passed:
+`RMSE=0.0913m, success=True` at nominal mass, consistent with the Mac's Phase 1
+result (0.09-0.11m).
 
 ## 1. Why this is an extension, not a redo
 
