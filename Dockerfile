@@ -38,5 +38,9 @@ COPY . .
 # (PID baseline, one episode, a few seconds). Override to run anything else,
 # e.g.:
 #   docker run --rm quadrotor-hybrid-rl-pid python scripts/train_ppo.py
-#   docker run --rm quadrotor-hybrid-rl-pid python scripts/evaluate_robustness.py
+#   docker run --rm quadrotor-hybrid-rl-pid python scripts/evaluate_robustness.py \
+#       --ppo-model results/phase2/ppo_seed0/best_model.zip \
+#       --hybrid-model results/phase2/hybrid_seed0/best_model.zip
+# (the --*-model flags are required: the script's own defaults point at the
+# phase 1 weights, which no longer exist anywhere -- see models/README.md)
 CMD ["python", "scripts/run_pid_baseline.py"]

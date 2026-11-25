@@ -108,9 +108,17 @@ of that applies on a standard Linux container.
 ```bash
 docker build -t quadrotor-hybrid-rl-pid .
 docker run --rm quadrotor-hybrid-rl-pid                                  # PID baseline smoke test
-docker run --rm quadrotor-hybrid-rl-pid python scripts/evaluate_robustness.py
+docker run --rm quadrotor-hybrid-rl-pid python scripts/evaluate_robustness.py \
+    --ppo-model results/phase2/ppo_seed0/best_model.zip \
+    --hybrid-model results/phase2/hybrid_seed0/best_model.zip
 docker run --rm -v "$(pwd)/results:/app/results" quadrotor-hybrid-rl-pid python scripts/train_ppo.py
 ```
+
+The explicit `--ppo-model`/`--hybrid-model` flags are required: the script's own
+defaults (`results/ppo/best_model.zip`, `results/hybrid/best_model.zip`) point at
+the phase 1 weights, which no longer exist anywhere (see models/README.md) --
+running it bare now needs those retrained first. The phase 2 weights above are
+committed and work out of the box.
 
 Mount `results/` (as in the last example) to keep artifacts written inside the
 container on the host afterward.
@@ -137,7 +145,10 @@ through Docker match `docs/results.md`.
 - Train the hybrid residual policy: `python scripts/train_hybrid.py --config config/hybrid.yaml`
 - Train either under a different seed/output dir (phase 2's seed sweep):
   `python scripts/train_ppo.py --seed 1 --output-dir results/phase2/ppo_seed1 --total-timesteps 1000000`
-- Evaluate robustness under domain shift: `python scripts/evaluate_robustness.py`
+- Evaluate robustness under domain shift (bare invocation needs the phase 1 models
+  retrained first -- they're gone, see models/README.md; this points it at the
+  committed phase 2 ones instead):
+  `python scripts/evaluate_robustness.py --ppo-model results/phase2/ppo_seed0/best_model.zip --hybrid-model results/phase2/hybrid_seed0/best_model.zip`
 - Evaluate a multi-seed sweep together (phase 2): `python scripts/evaluate_seed_sweep.py`
 - Reproduce all plots: `python scripts/make_plots.py`
 - Reproduce phase 2's plots instead (pooled across seeds):
