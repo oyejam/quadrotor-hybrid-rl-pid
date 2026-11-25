@@ -16,9 +16,10 @@ domain_randomization:
 training:
   algo: PPO
   policy: MlpPolicy
-  total_timesteps: 500000         # start small on CPU; raise if time budget allows
-  n_envs: 2                       # matches the 2 physical cores available
-  seed: 0
+  total_timesteps: 2000000        # phase 2 (docs/gpu_machine_plan.md): up from the Mac's 500000
+  n_envs: 16                      # phase 2: up from 2, leaving headroom on this 16-core/24-thread CPU
+  device: cpu                     # phase 2: benchmarked cpu vs cuda for this MLP policy, see docs/gpu_machine_plan.md
+  seed: 0                         # phase 2 seed sweep (0,1,2) overrides this via --seed, see scripts/train_ppo.py
   eval_freq: 5000
   n_eval_episodes: 5
 

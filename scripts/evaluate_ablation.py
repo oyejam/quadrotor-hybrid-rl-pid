@@ -16,7 +16,7 @@ Usage
         --model results/hybrid_tight_clip/best_model.zip \
         --config config/hybrid_tight_clip.yaml \
         --mass-scales 0.7 0.8 0.9 1.0 1.1 1.2 1.3 \
-        --episodes 10
+        --episodes 30
 """
 import os
 import sys
@@ -40,7 +40,7 @@ def main():
     parser.add_argument("--config", type=str, required=True)
     parser.add_argument("--mass-scales", type=float, nargs="+",
                          default=[0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3])
-    parser.add_argument("--episodes", type=int, default=10)
+    parser.add_argument("--episodes", type=int, default=30)
     parser.add_argument("--output", type=str, default="results/robustness_sweep.csv")
     args = parser.parse_args()
 

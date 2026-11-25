@@ -22,8 +22,9 @@ hybrid:
 training:
   algo: PPO
   policy: MlpPolicy
-  total_timesteps: 500000
-  n_envs: 2
+  total_timesteps: 2000000        # phase 2: kept identical to config/hybrid.yaml (only the clip variable differs)
+  n_envs: 16
+  device: cpu
   seed: 0
   eval_freq: 5000
   n_eval_episodes: 5

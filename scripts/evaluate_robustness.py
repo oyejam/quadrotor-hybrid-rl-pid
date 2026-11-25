@@ -8,7 +8,7 @@ Usage
     python scripts/train_hybrid.py   # produces results/hybrid/best_model.zip
     python scripts/evaluate_robustness.py \
         --mass-scales 0.7 0.8 0.9 1.0 1.1 1.2 1.3 \
-        --episodes 10
+        --episodes 30
 """
 import os
 import sys
@@ -74,7 +74,7 @@ def main():
     parser.add_argument("--hybrid-config", type=str, default="config/hybrid.yaml")
     parser.add_argument("--mass-scales", type=float, nargs="+",
                          default=[0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3])
-    parser.add_argument("--episodes", type=int, default=10)
+    parser.add_argument("--episodes", type=int, default=30)
     parser.add_argument("--output", type=str, default="results/robustness_sweep.csv")
     args = parser.parse_args()
 

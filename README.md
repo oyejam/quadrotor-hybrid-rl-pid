@@ -9,10 +9,11 @@
 
 See [docs/literature_review.md](docs/literature_review.md) for the literature review,
 [docs/research_plan.md](docs/research_plan.md) for the problem statement, hypothesis and
-methodology, and [docs/results.md](docs/results.md) for the experimental results.
-[docs/gpu_machine_plan.md](docs/gpu_machine_plan.md) covers the second phase of work on
-a CUDA-equipped machine, extending the original CPU-only results with more seeds, more
-evaluation episodes, and a larger training budget.
+methodology, and [docs/results.md](docs/results.md) for the phase 1 experimental results
+(CPU-only Mac, single seed). [docs/gpu_machine_plan.md](docs/gpu_machine_plan.md) and
+[docs/results_phase2.md](docs/results_phase2.md) cover the second phase of work on a
+second machine with far more CPU cores: a 3-seed sweep, a larger training budget, and
+30 (instead of 10) evaluation episodes per point.
 
 **Summary.** The project compares three quadrotor trajectory-tracking controllers: a
 classical PID controller, a PPO reinforcement-learning policy, and a hybrid controller
@@ -21,10 +22,18 @@ with Domain Randomization (DR) over the drone's mass. The hypothesis was that th
 hybrid controller would degrade more gracefully than PID or PPO outside the training
 mass range. It didn't. PID completes the reference trajectory at every mass tested
 (70-130% of nominal). PPO and the hybrid controller both fail to complete it on almost
-every episode at or below nominal mass, and only become reliable once the true mass is
-at least 10% above what they were trained on. Full analysis, including a follow-up
-ablation and a correction to an evaluation bug in an earlier pass, is in
-[docs/results.md](docs/results.md).
+every episode at or below nominal mass. Phase 2's larger seed/episode sweep confirms
+this holds up, not as an artifact of a single run or a small CPU-only training budget,
+and adds a specific nuance phase 1 could only guess at: the hybrid's reliability right
+at nominal mass turned out to be seed-dependent (2 of 3 seeds succeed, 1 doesn't),
+while PPO's failure there is consistent across all 3 seeds. Phase 2 also found that the
+hybrid structure trains to a more stable, longer-surviving policy than PPO on the
+training distribution itself, in every seed — real support for the project's secondary
+hypothesis about sample efficiency, even though it doesn't rescue the main hypothesis
+about zero-shot robustness. Full analysis, including a follow-up ablation and a
+correction to an evaluation bug in an earlier pass, is in
+[docs/results.md](docs/results.md) (phase 1) and
+[docs/results_phase2.md](docs/results_phase2.md) (phase 2).
 
 ## Demonstration (Video)
 
@@ -114,9 +123,17 @@ through Docker match `docs/results.md`.
 - Train the PID baseline (no learning, scripted controller): `python scripts/run_pid_baseline.py`
 - Train the PPO policy: `python scripts/train_ppo.py --config config/ppo.yaml`
 - Train the hybrid residual policy: `python scripts/train_hybrid.py --config config/hybrid.yaml`
+- Train either under a different seed/output dir (phase 2's seed sweep):
+  `python scripts/train_ppo.py --seed 1 --output-dir results/phase2/ppo_seed1 --total-timesteps 1000000`
 - Evaluate robustness under domain shift: `python scripts/evaluate_robustness.py`
+- Evaluate a multi-seed sweep together (phase 2): `python scripts/evaluate_seed_sweep.py`
 - Reproduce all plots: `python scripts/make_plots.py`
 - Record the demo video: `python scripts/record_demo.py`
+
+Phase 2 training (`config/*.yaml`'s `n_envs: 16`) spawns that many subprocesses; set
+`OMP_NUM_THREADS=1`, `OPENBLAS_NUM_THREADS=1`, and `MKL_NUM_THREADS=1` in the
+environment first, or each subprocess's own BLAS thread pool can exhaust memory (see
+[docs/results_phase2.md](docs/results_phase2.md) section 1).
 
 ## Description of the Obtained Results
 
@@ -130,6 +147,17 @@ plots, and discussion: [docs/results.md](docs/results.md). Raw data:
 [results/robustness_sweep.csv](results/robustness_sweep.csv). Plots:
 [results/robustness_plot.png](results/robustness_plot.png) and
 [results/success_rate_plot.png](results/success_rate_plot.png).
+
+**Phase 2** (3 seeds x 30 episodes/point instead of 1 seed x 10) confirms this
+pattern rather than overturning it, and sharpens it: PPO now fails at +10% mass too
+(consistently across all 3 seeds, a change from phase 1's single-run result at that
+point), and the hybrid's success at nominal mass turns out to depend on the training
+seed (2 of 3 seeds succeed, 1 doesn't) — direct confirmation of a limitation phase 1
+could only flag as a possibility. Separately, the hybrid trains to a far more stable,
+longer-surviving policy than PPO on the training distribution itself, in every seed,
+which is real (if partial) support for the project's sample-efficiency hypothesis.
+Full analysis: [docs/results_phase2.md](docs/results_phase2.md). Raw data:
+[results/phase2/robustness_sweep_seeds.csv](results/phase2/robustness_sweep_seeds.csv).
 
 ## License
 MIT. See [LICENSE](LICENSE).

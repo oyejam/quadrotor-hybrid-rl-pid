@@ -70,25 +70,32 @@ def build_vec_env(cfg: dict, hybrid: bool, n_envs: int):
     return DummyVecEnv([make_thunk()])
 
 
-def run_training(cfg: dict, hybrid: bool, total_timesteps_override: int = None):
+def run_training(cfg: dict, hybrid: bool, total_timesteps_override: int = None,
+                  seed_override: int = None, output_dir_override: str = None):
     """Builds the vectorized training env + a single eval env from `cfg`,
     trains PPO, and saves the final model. Used identically by
     scripts/train_ppo.py and scripts/train_hybrid.py.
+
+    seed_override/output_dir_override exist for the phase-2 seed sweep
+    (docs/gpu_machine_plan.md section 4): running the same config under
+    seeds 0/1/2 needs a distinct seed and output directory per run without
+    hand-editing the YAML each time.
     """
     train_cfg = cfg["training"]
-    seed = train_cfg.get("seed", 0)
+    seed = seed_override if seed_override is not None else train_cfg.get("seed", 0)
     n_envs = train_cfg.get("n_envs", 1)
     total_timesteps = total_timesteps_override or train_cfg["total_timesteps"]
 
-    out_dir = cfg["logging"]["output_dir"]
+    out_dir = output_dir_override or cfg["logging"]["output_dir"]
     os.makedirs(out_dir, exist_ok=True)
 
     train_env = build_vec_env(cfg, hybrid=hybrid, n_envs=n_envs)
     eval_env = Monitor(make_env_fn(cfg, hybrid=hybrid)())
 
     tb_log = os.path.join(out_dir, "tb") if cfg["logging"].get("tensorboard", False) else None
+    device = train_cfg.get("device", "auto")
     model = PPO(train_cfg.get("policy", "MlpPolicy"), train_env, verbose=1,
-                seed=seed, tensorboard_log=tb_log)
+                seed=seed, tensorboard_log=tb_log, device=device)
 
     eval_callback = EvalCallback(
         eval_env,
