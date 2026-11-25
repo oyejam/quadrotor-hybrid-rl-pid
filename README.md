@@ -77,9 +77,17 @@ publishing Intel-macOS wheels after `2.2.2`. The simulation code itself doesn't 
 installed with `--no-deps` and the real dependencies come from `requirements.txt`
 separately, pinned to versions that are mutually compatible and available for this
 platform (`torch==2.2.2` needs `stable-baselines3<=2.4.x`, since 2.5+ needs
-`torch>=2.3`). On a platform with current PyTorch wheels (Linux/Windows, or Apple
-Silicon) you can likely skip `--no-deps` and just
-`pip install -e external/gym-pybullet-drones`.
+`torch>=2.3`).
+
+**On Windows with a CUDA GPU** (the phase 2 machine, docs/gpu_machine_plan.md):
+`--no-deps` was still needed, for the opposite reason -- the CUDA 12.8 wheel index's
+newest build was `torch==2.11.0+cu128`, still behind `gym-pybullet-drones`'s
+`torch>=2.13` pin, so skipping `--no-deps` would have pulled a non-CUDA torch from
+plain PyPI over the verified CUDA build. Install torch from
+`download.pytorch.org/whl/cu128` first, then the rest of
+[requirements-phase2.txt](requirements-phase2.txt) (the versions phase 2 actually
+ran, separate from `requirements.txt` above). Don't assume a current-PyTorch-wheel
+platform can skip `--no-deps` without checking the wheel index at install time.
 
 ```bash
 python3 -m venv .venv
@@ -132,6 +140,8 @@ through Docker match `docs/results.md`.
 - Evaluate robustness under domain shift: `python scripts/evaluate_robustness.py`
 - Evaluate a multi-seed sweep together (phase 2): `python scripts/evaluate_seed_sweep.py`
 - Reproduce all plots: `python scripts/make_plots.py`
+- Reproduce phase 2's plots instead (pooled across seeds):
+  `python scripts/make_plots.py --input results/phase2/robustness_sweep_seeds.csv --output results/phase2/robustness_plot.png --success-output results/phase2/success_rate_plot.png`
 - Record the demo video: `python scripts/record_demo.py`
 
 Phase 2 training (`config/*.yaml`'s `n_envs: 16`) spawns that many subprocesses; set

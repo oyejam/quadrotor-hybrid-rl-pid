@@ -143,7 +143,10 @@ comparison).
   trajectory, not a distribution of trajectories) so a small policy network and modest
   timestep budget (e.g. 200k-1M steps, tuned empirically) is sufficient.
 - **Reproducibility.** Fix and record all random seeds; log exact package versions in
-  `requirements.txt`.
+  `requirements.txt`. Phase 2 (docs/gpu_machine_plan.md) ran on different hardware with
+  a different Python/CUDA situation, so its exact versions are logged separately in
+  `requirements-phase2.txt` rather than overwriting this file's record of what actually
+  produced the numbers below.
 - **Docker couldn't be verified locally.** This machine (2015 MacBook Air,
   `MacBookAir7,2`) is capped by Apple at macOS 12 (Monterey); Docker Desktop, Colima,
   and Podman all now require macOS 13+. `.github/workflows/docker-build.yml` builds

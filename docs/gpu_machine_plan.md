@@ -23,7 +23,11 @@ only `2.11.0+cu128`. Installing without `--no-deps` would have had pip satisfy t
 pin from the default PyPI index instead, silently replacing the verified CUDA build
 with a non-CUDA one. Smoke test (`scripts/run_pid_baseline.py`) passed:
 `RMSE=0.0913m, success=True` at nominal mass, consistent with the Mac's Phase 1
-result (0.09-0.11m).
+result (0.09-0.11m). Every package version actually installed (torch, stable-baselines3,
+gymnasium, numpy, scipy, and the rest) is pinned exactly in
+[requirements-phase2.txt](../requirements-phase2.txt), separate from the Mac's
+`requirements.txt`, which stays accurate to what produced docs/results.md and was not
+touched here.
 
 ## 1. Why this is an extension, not a redo
 

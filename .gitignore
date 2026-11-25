@@ -29,6 +29,11 @@ models/*.zip
 tensorboard_logs/
 wandb/
 
+# Phase 2 models are small (~300KB each) and are the only copies of these
+# weights that exist anywhere -- committed deliberately so they can't be
+# lost the way the phase 1 models were (see models/README.md).
+!results/phase2/*/best_model.zip
+
 # OS / IDE
 .DS_Store
 .idea/

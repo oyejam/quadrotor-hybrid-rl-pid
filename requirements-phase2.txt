@@ -1,0 +1,30 @@
+# Exact package versions actually used to produce docs/results_phase2.md,
+# captured from the phase 2 machine's venv (see docs/gpu_machine_plan.md for
+# the hardware and setup steps). requirements.txt is left untouched as the
+# accurate record of what produced docs/results.md on the original MacBook --
+# the two are pinned to genuinely different versions (different Python/OS/
+# PyTorch-wheel situation) and should not be merged into one file.
+#
+# torch is a CUDA 12.8 build, not available from plain PyPI: install it first
+# with
+#   pip install torch==2.11.0 --index-url https://download.pytorch.org/whl/cu128
+# then install the rest of this file. As with requirements.txt,
+# `gym-pybullet-drones` itself is installed separately from a git clone with
+# --no-deps (see README.md -> Installation and Deployment, and
+# docs/gpu_machine_plan.md section on why --no-deps was still needed here).
+
+torch==2.11.0+cu128
+stable-baselines3==2.9.2
+gymnasium==1.4.0
+numpy==2.5.5
+scipy==1.18.1
+pybullet==3.2.7
+matplotlib==3.11.2
+pandas==3.1.1
+transforms3d==0.4.2
+pillow==13.0.0
+control==0.10.2
+pytest==9.2.0
+pyyaml==6.0.4
+tensorboard==2.21.0
+imageio-ffmpeg==0.8.1
