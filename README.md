@@ -10,6 +10,9 @@
 See [docs/literature_review.md](docs/literature_review.md) for the literature review,
 [docs/research_plan.md](docs/research_plan.md) for the problem statement, hypothesis and
 methodology, and [docs/results.md](docs/results.md) for the experimental results.
+[docs/gpu_machine_plan.md](docs/gpu_machine_plan.md) covers the second phase of work on
+a CUDA-equipped machine, extending the original CPU-only results with more seeds, more
+evaluation episodes, and a larger training budget.
 
 **Summary.** The project compares three quadrotor trajectory-tracking controllers: a
 classical PID controller, a PPO reinforcement-learning policy, and a hybrid controller
