@@ -18,3 +18,14 @@ curves and `results/robustness_sweep.csv` already in the repo.
 stays git-ignored and regeneratable by re-running training. This means every number
 in docs/results_phase2.md and the demo video can be reproduced, or re-evaluated
 under a different sweep, without retraining.
+
+Committing the weights is a convenience, not the only path to them: the exact
+commands in README.md's "Running and Usage" section (`train_ppo.py` /
+`train_hybrid.py` with `--seed`/`--output-dir`/`--total-timesteps`) independently
+regenerate a working `best_model.zip` from scratch. Verified by re-running both
+commands at a reduced timestep count into a scratch directory -- both produced a
+`best_model.zip` that loads via `PPO.load()` and predicts a valid 4-dim RPM action,
+the same way every evaluation script and the demo video load these files. Exact
+bit-for-bit reproduction isn't guaranteed (fixed seeds don't pin subprocess
+scheduling across `n_envs: 16` parallel workers), but the documented commands are
+confirmed to produce a working, loadable policy, not just assumed to.
