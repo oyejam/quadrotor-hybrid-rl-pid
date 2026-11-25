@@ -1,7 +1,13 @@
 """Records a short, captioned demo video showing the actual phenomenon in
-docs/results.md: PID completes the trajectory at every tested mass, while
-PPO/Hybrid crash almost immediately at or below nominal mass and only
-recover once the drone is heavier.
+docs/results.md and docs/results_phase2.md: PID completes the trajectory
+at every tested mass, while PPO/Hybrid crash almost immediately at or
+below nominal mass and only recover once the drone is heavier. Uses the
+phase 2 seed-swept models (results/phase2/*) so the clips match the
+current, statistically stronger results rather than the single-seed
+phase 1 run, and adds the two findings specific to phase 2: PPO's
+failure now extends to +10% mass (not just at/below nominal), and the
+hybrid's nominal-mass outcome is seed-dependent (shown by playing seed 0
+and seed 1 back to back at the same mass).
 
 Runs entirely headless (gui=False) using PyBullet's software TinyRenderer,
 so it works on machines with no GPU/display. Uses the `imageio-ffmpeg`
@@ -58,7 +64,7 @@ def _set_close_camera(env):
         physicsClientId=env.CLIENT)
 
 
-def record_pid_clip(frames_dir, mass_scale, max_seconds=6, ctrl_freq=48, pyb_freq=240):
+def record_pid_clip(frames_dir, mass_scale, max_seconds=10, ctrl_freq=48, pyb_freq=240):
     wp = build_waypoints(ctrl_freq)
     init_xyz = np.array([wp[0, :]])
     env = CtrlAviary(drone_model=DroneModel('cf2x'), num_drones=1,
@@ -81,7 +87,11 @@ def record_pid_clip(frames_dir, mass_scale, max_seconds=6, ctrl_freq=48, pyb_fre
     return _find_recording_dir(frames_dir)
 
 
-def record_rl_clip(frames_dir, model_path, cfg_path, hybrid, mass_scale, max_seconds=6):
+def record_rl_clip(frames_dir, model_path, cfg_path, hybrid, mass_scale, max_seconds=10):
+    # max_seconds matches episode_len_sec (10s) in config/*.yaml -- a shorter
+    # cap can end before a late failure (e.g. the phase 2 hybrid seed 0
+    # model at nominal mass fails at step 406/480, 8.46s in) and make a
+    # clip labeled "crashes" look like it's still flying fine.
     # Note: TrajTrackAviary (via BaseRLAviary) does not expose an
     # output_folder constructor argument in this version of
     # gym_pybullet_drones -- it always records under BaseAviary's own
@@ -181,18 +191,21 @@ def concat_clips(clip_paths, out_path, work_dir):
 CLIPS = [
     # (label, kind, controller-specific kwargs)
     ("PID\nmass = 70% of nominal\nstill tracks reliably", "pid", dict(mass_scale=0.7)),
-    ("PPO\nmass = nominal (its 'best' RMSE point)\ncrashes almost immediately",
-     "rl", dict(model_path="results/ppo/best_model.zip", cfg_path="config/ppo.yaml",
+    ("PPO (seed 0)\nmass = nominal\ncrashes almost immediately",
+     "rl", dict(model_path="results/phase2/ppo_seed0/best_model.zip", cfg_path="config/ppo.yaml",
                 hybrid=False, mass_scale=1.0)),
-    ("PPO\nmass = 120% of nominal\nsucceeds once heavier",
-     "rl", dict(model_path="results/ppo/best_model.zip", cfg_path="config/ppo.yaml",
+    ("PPO (seed 0)\nmass = 110% of nominal\nstill fails here -- consistent across all 3 seeds",
+     "rl", dict(model_path="results/phase2/ppo_seed0/best_model.zip", cfg_path="config/ppo.yaml",
+                hybrid=False, mass_scale=1.1)),
+    ("PPO (seed 0)\nmass = 120% of nominal\nsucceeds once heavier",
+     "rl", dict(model_path="results/phase2/ppo_seed0/best_model.zip", cfg_path="config/ppo.yaml",
                 hybrid=False, mass_scale=1.2)),
-    ("Hybrid (clip=0.2)\nmass = nominal\ncrashes despite the PID floor",
-     "rl", dict(model_path="results/hybrid/best_model.zip", cfg_path="config/hybrid.yaml",
+    ("Hybrid (seed 0)\nmass = nominal\ncrashes despite the PID floor",
+     "rl", dict(model_path="results/phase2/hybrid_seed0/best_model.zip", cfg_path="config/hybrid.yaml",
                 hybrid=True, mass_scale=1.0)),
-    ("Hybrid (clip=0.08, tightened)\nmass = nominal\nthe one case the ablation fixed",
-     "rl", dict(model_path="results/hybrid_tight_clip/best_model.zip",
-                cfg_path="config/hybrid_tight_clip.yaml", hybrid=True, mass_scale=1.0)),
+    ("Hybrid (seed 1), same mass\nsucceeds -- nominal-mass outcome is seed-dependent",
+     "rl", dict(model_path="results/phase2/hybrid_seed1/best_model.zip", cfg_path="config/hybrid.yaml",
+                hybrid=True, mass_scale=1.0)),
 ]
 
 

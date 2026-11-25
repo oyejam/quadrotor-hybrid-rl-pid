@@ -43,12 +43,16 @@ Full video: https://raw.githubusercontent.com/oyejam/quadrotor-hybrid-rl-pid/mai
 
 (GIF above is a preview. GitHub doesn't embed a video player from a plain file link.)
 
-27-second clip (`scripts/record_demo.py`, recorded headless on a CPU-only machine):
-PID tracking reliably at 70% of nominal mass, PPO crashing almost immediately at
-exactly the mass where its RMSE looked best, PPO succeeding once the drone is 20%
-heavier, the original hybrid controller crashing at nominal mass despite the PID
-floor, and the tightened-clip hybrid (the case the ablation in docs/results.md §3.1
-fixed) succeeding at nominal mass.
+50-second clip (`scripts/record_demo.py`, recorded headless, using the phase 2
+seed-swept models so the footage matches the current results rather than the
+single-seed phase 1 run): PID tracking reliably at 70% of nominal mass, PPO
+(seed 0) crashing almost immediately at nominal mass, PPO still failing at 110%
+of nominal (the phase 2 finding that it isn't just a nominal-mass problem),
+PPO succeeding once the drone is 20% heavier, the hybrid controller (seed 0)
+crashing at nominal mass despite the PID floor, and the same hybrid controller
+trained under seed 1 completing the trajectory at that identical mass --
+the seed-dependence phase 2 found at that point (section 5 of
+[docs/results_phase2.md](docs/results_phase2.md)).
 
 ## Installation and Deployment
 
